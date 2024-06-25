@@ -8,10 +8,10 @@ import (
 
 type AuthService struct {
 	currentUser model.User
-	repository  *repository.UserRepository
+	repository  repository.Repository[model.User]
 }
 
-func NewAuthService(repository *repository.UserRepository) *AuthService {
+func NewAuthService(repository repository.Repository[model.User]) *AuthService {
 	return &AuthService{repository: repository}
 }
 
@@ -34,7 +34,7 @@ func (s *AuthService) Login(login string, password string) *AuthError {
 }
 
 func (s *AuthService) Register(login string, password string) *AuthError {
-	if s.repository.Exists(login) {
+	if s.exists(login) {
 		return NewUserAlreadyExistsAuthError()
 	}
 
@@ -42,4 +42,9 @@ func (s *AuthService) Register(login string, password string) *AuthError {
 	s.repository.Write(login, user)
 	s.currentUser = user
 	return nil
+}
+
+func (s *AuthService) exists(login string) bool {
+	_, err := s.repository.Read(login)
+	return err == nil
 }
